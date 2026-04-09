@@ -93,23 +93,9 @@ npm start
 ## First Login & Configuration
 
 1. Open http://localhost:3000
-2. Login as **admin@company.com** / **Admin@123**
+2. Login as **admin@xxy.com** / **Admin112**
 3. Go to **Admin Dashboard → Users**
 4. Create users:
-
-### Example users to create:
-
-| Name | Email | Password | Role | Tower | Workgroup | Shift | Reporting Manager |
-|------|-------|----------|------|-------|-----------|-------|-------------------|
-| Ishant | ishant@co.com | Pass@123 | Senior Manager | Tower4 | — | — | — |
-| Ramya | ramya@co.com | Pass@123 | Manager | Tower4 | Wireless | 1 | Ishant |
-| Apoorva | apoorva@co.com | Pass@123 | Manager | Tower4 | Wireless | 2 | Ishant |
-| Arindam | arindam@co.com | Pass@123 | Manager | Tower4 | Wireless | 2 | Ishant |
-| Meenakshi | meenakshi@co.com | Pass@123 | Manager | Tower4 | CATC | 1 | Ishant |
-| Karthikeyan | karthik@co.com | Pass@123 | Manager | Tower4 | CATC | 2 | Ishant |
-| Brahadesh | brahadesh@co.com | Pass@123 | Director | — | — | — | — |
-
----
 
 ## Role-Based Flows
 
