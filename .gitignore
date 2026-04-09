@@ -10,6 +10,9 @@ backend/.env
 # React build output
 frontend/build/
 
+# IDE / Claude Code settings
+.claude/
+
 # macOS
 .DS_Store
 
