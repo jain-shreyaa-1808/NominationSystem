@@ -111,8 +111,17 @@ router.get('/status', async (req, res) => {
       });
       if (smSel && smSel.status === 'submitted') {
         reportingManagerStatus = 'submitted';
-        const anyDir = await DirectorAction.findOne({ status: 'completed' });
-        if (anyDir) directorStatus = 'completed';
+
+        // Find which director THIS manager's senior manager reports to,
+        // then check only that director's action — not any director's.
+        const seniorMgr = await User.findById(req.user.reportingManager).select('reportingDirector');
+        if (seniorMgr?.reportingDirector) {
+          const dirAct = await DirectorAction.findOne({
+            director: seniorMgr.reportingDirector,
+            status: 'completed',
+          });
+          if (dirAct) directorStatus = 'completed';
+        }
       }
     }
 

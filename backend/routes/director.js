@@ -13,7 +13,9 @@ router.use(protect, authorize('director'));
 router.get('/senior-managers', async (req, res) => {
   try {
     const sms = await User.find({ role: 'senior_manager', reportingDirector: req.user._id });
-    const selections = await SeniorSelection.find();
+    const selections = await SeniorSelection.find({
+      seniorManager: { $in: sms.map((sm) => sm._id) },
+    });
 
     const result = sms.map((sm) => {
       const sel = selections.find(
