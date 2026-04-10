@@ -25,7 +25,7 @@ A full-stack corporate awards nomination platform built with the MERN stack. Ena
 The system manages a corporate awards cycle across multiple organisational levels:
 
 ```
-Managers (×5 per tower)
+Managers (ex:5)
     ↓  each nominates 6 people (1 per award category)
 Senior Manager
     ↓  reviews pool of 30 nominations, selects 1 per category
@@ -248,16 +248,6 @@ npm start
 
 Create these users in the Admin Dashboard → Users → Add User:
 
-| Name | Email | Role | Tower | Workgroup | Shift | Reports To |
-|------|-------|------|-------|-----------|-------|------------|
-| Brahadesh | brahadesh@co.com | Director | — | — | — | Tech Group: Enterprise |
-| Ishant | ishant@co.com | Senior Manager | Tower4 | — | — | Director: Brahadesh |
-| Ramya | ramya@co.com | Manager | Tower4 | Wireless | 1 | SM: Ishant |
-| Apoorva | apoorva@co.com | Manager | Tower4 | Wireless | 2 | SM: Ishant |
-| Arindam | arindam@co.com | Manager | Tower4 | CATC | 1 | SM: Ishant |
-| Meenakshi | meenakshi@co.com | Manager | Tower4 | CATC | 2 | SM: Ishant |
-| Karthikeyan | karthik@co.com | Manager | Tower4 | IoT | 1 | SM: Ishant |
-
 Each user must then go to `/signup`, enter their email, and set their own password before they can log in.
 
 ---
@@ -270,8 +260,6 @@ Each user must then go to `/signup`, enter their email, and set their own passwo
 | `JWT_SECRET` | ✅ | Secret for signing JWT tokens (any long random string) |
 | `PORT` | ✅ | Server port (use `8000` locally, Render sets this automatically) |
 | `GROQ_API_KEY` | ⚠️ | Free key from [console.groq.com](https://console.groq.com) — AI features disabled without it |
-| `MONGO_TLS_ALLOW_INVALID_CERT` | ❌ | Set `true` only on corporate laptops with TLS inspection |
-| `NODE_ENV` | ❌ | Set to `production` on Render — enables static file serving |
 
 ---
 
@@ -359,65 +347,5 @@ Free tier: **14,400 requests/day**, **30 requests/minute**
 | `POST` | `/api/ai/chat` | Chat with AI about recommendations |
 
 ---
-
-## Deployment (Render.com)
-
-The project is configured for one-service deployment: the backend builds the React app and serves it as static files.
-
-### Steps
-
-**1. Push to GitHub**
-```bash
-git add .
-git commit -m "ready for deployment"
-git push origin main
-```
-
-**2. Create a Web Service on Render**
-- Go to [render.com](https://render.com) → New → Web Service
-- Connect your GitHub repo
-- Render will auto-detect `render.yaml` — settings are pre-configured
-
-If setting up manually:
-| Setting | Value |
-|---------|-------|
-| Build Command | `npm install --prefix backend && npm install --prefix frontend && npm run build --prefix frontend` |
-| Start Command | `node backend/server.js` |
-| Node Version | 18 or higher |
-
-**3. Set environment variables** in the Render dashboard (Environment tab):
-
-| Key | Value |
-|-----|-------|
-| `NODE_ENV` | `production` |
-| `MONGO_URI` | Your Atlas connection string |
-| `JWT_SECRET` | A long random string |
-| `GROQ_API_KEY` | Your Groq API key |
-| `MONGO_TLS_ALLOW_INVALID_CERT` | `false` |
-
-**4. Deploy** — Render builds and gives you a live URL like `https://nomination-system.onrender.com`
-
-> **Note:** The free tier spins down after 15 minutes of inactivity. The first request after idle takes ~30 seconds to wake up. This is normal for the free plan.
-
-### MongoDB Atlas network access
-Make sure your Atlas cluster allows connections from anywhere (`0.0.0.0/0`) or from Render's IP ranges, otherwise the backend will fail to connect.
-
-In Atlas → Network Access → Add IP Address → Allow Access from Anywhere.
-
----
-
-## Troubleshooting
-
-| Problem | Fix |
-|---------|-----|
-| `EADDRINUSE: port 8000` | Run `lsof -ti :8000 \| xargs kill -9` then restart |
-| MongoDB connection timeout | Check Atlas IP whitelist and MONGO_URI in `.env` |
-| "Account not yet activated" on login | User needs to go to `/signup` first to set their password |
-| AI returns error | Check `GROQ_API_KEY` is set in `.env` and is valid (console.groq.com) |
-| Render deploy fails | Check build logs — usually a missing env variable |
-
----
-
-## License
 
 Internal use only — not for public distribution.
