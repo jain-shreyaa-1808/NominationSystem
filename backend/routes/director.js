@@ -37,14 +37,20 @@ router.get('/senior-managers', async (req, res) => {
   }
 });
 
-// GET /api/director/managers-status  – all managers across all towers
+// GET /api/director/managers-status  – managers in this director's chain only
 router.get('/managers-status', async (req, res) => {
   try {
-    const managers = await User.find({ role: 'manager' }).populate(
+    // Only show managers whose senior manager reports to THIS director
+    const mySMs = await User.find({ role: 'senior_manager', reportingDirector: req.user._id }).select('_id');
+    const smIds = mySMs.map((sm) => sm._id);
+
+    const managers = await User.find({ role: 'manager', reportingManager: { $in: smIds } }).populate(
       'reportingManager',
       'name tower'
     );
-    const nominations = await Nomination.find();
+    const nominations = await Nomination.find({
+      manager: { $in: managers.map((m) => m._id) },
+    });
 
     const result = managers.map((m) => {
       const nom = nominations.find(

@@ -6,6 +6,8 @@ const path = require('path');
 
 dotenv.config();
 
+const { startReminderJob } = require('./jobs/reminderJob');
+
 const app = express();
 
 // In production the frontend is served from the same origin, no CORS needed.
@@ -49,6 +51,7 @@ mongoose
   .connect(process.env.MONGO_URI, mongoOptions)
   .then(() => {
     console.log('✅ MongoDB connected');
+    startReminderJob(); // start the daily 8 AM email reminder cron
     const PORT = process.env.PORT || 8000;
     app.listen(PORT, () =>
       console.log(`🚀 Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`)

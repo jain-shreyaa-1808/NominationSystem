@@ -5,6 +5,8 @@ const Category = require('../models/Category');
 const Nomination = require('../models/Nomination');
 const SeniorSelection = require('../models/SeniorSelection');
 const DirectorAction = require('../models/DirectorAction');
+const Deadline = require('../models/Deadline');
+const { runReminderCheck } = require('../jobs/reminderJob');
 const { protect, authorize } = require('../middleware/auth');
 
 router.use(protect, authorize('admin'));
@@ -91,6 +93,21 @@ router.delete('/users/:id', async (req, res) => {
     if (!user) return res.status(404).json({ message: 'User not found' });
     if (user.role === 'admin' && user._id.toString() === req.user._id.toString())
       return res.status(400).json({ message: 'Cannot delete yourself' });
+
+    // Cascade: remove submission records and unlink reporting relationships
+    if (user.role === 'director') {
+      await DirectorAction.findOneAndDelete({ director: user._id });
+      // Unlink any senior managers who reported to this director
+      await User.updateMany({ reportingDirector: user._id }, { $set: { reportingDirector: null } });
+    }
+    if (user.role === 'senior_manager') {
+      await SeniorSelection.findOneAndDelete({ seniorManager: user._id });
+      // Unlink any managers who reported to this senior manager
+      await User.updateMany({ reportingManager: user._id }, { $set: { reportingManager: null } });
+    }
+    if (user.role === 'manager') {
+      await Nomination.findOneAndDelete({ manager: user._id });
+    }
 
     await User.findByIdAndDelete(req.params.id);
     res.json({ message: 'User deleted' });
@@ -214,6 +231,62 @@ router.get('/status', async (req, res) => {
     });
 
     res.json({ managers: managerStatus, seniorManagers: seniorStatus, directors: directorStatus });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// ───────── DEADLINES ─────────
+
+// GET /api/admin/deadlines  – get all role deadlines
+router.get('/deadlines', async (req, res) => {
+  try {
+    const deadlines = await Deadline.find().sort({ role: 1 });
+    res.json(deadlines);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// PUT /api/admin/deadlines/:role  – set (upsert) deadline for a role
+router.put('/deadlines/:role', async (req, res) => {
+  try {
+    const { role } = req.params;
+    const { deadline, note } = req.body;
+
+    if (!['manager', 'senior_manager', 'director'].includes(role)) {
+      return res.status(400).json({ message: 'Invalid role' });
+    }
+    if (!deadline) {
+      return res.status(400).json({ message: 'Deadline date is required' });
+    }
+
+    const dl = await Deadline.findOneAndUpdate(
+      { role },
+      { $set: { deadline: new Date(deadline), note: note || '' } },
+      { upsert: true, new: true }
+    );
+    res.json(dl);
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// DELETE /api/admin/deadlines/:role  – remove deadline for a role
+router.delete('/deadlines/:role', async (req, res) => {
+  try {
+    await Deadline.findOneAndDelete({ role: req.params.role });
+    res.json({ message: 'Deadline removed' });
+  } catch (err) {
+    res.status(500).json({ message: err.message });
+  }
+});
+
+// POST /api/admin/deadlines/test-reminders  – manually trigger the reminder check
+router.post('/deadlines/test-reminders', async (req, res) => {
+  try {
+    await runReminderCheck();
+    res.json({ message: 'Reminder check triggered. Check server logs for details.' });
   } catch (err) {
     res.status(500).json({ message: err.message });
   }
